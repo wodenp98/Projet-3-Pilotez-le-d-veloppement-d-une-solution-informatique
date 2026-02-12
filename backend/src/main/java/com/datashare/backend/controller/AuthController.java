@@ -1,6 +1,7 @@
 package com.datashare.backend.controller;
 
 import com.datashare.backend.dto.AuthResponse;
+import com.datashare.backend.dto.LoginRequest;
 import com.datashare.backend.dto.RegisterRequest;
 import com.datashare.backend.service.AuthService;
 import jakarta.validation.Valid;
@@ -27,4 +28,9 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        AuthResponse response = authService.login(request);
+        return ResponseEntity.ok(response);
+    }
 }
