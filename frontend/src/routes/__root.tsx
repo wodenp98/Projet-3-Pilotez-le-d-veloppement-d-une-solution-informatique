@@ -1,6 +1,8 @@
 import { Link, Outlet, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { LogOut } from "lucide-react";
+import { useState } from "react";
+import { UploadModal } from "../components/upload-modal";
 import { useAuth } from "../hooks/useAuth";
 
 export const Route = createRootRoute({
@@ -46,6 +48,7 @@ function PublicLayout() {
 
 function AuthenticatedLayout() {
   const { logout } = useAuth();
+  const [uploadOpen, setUploadOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen">
@@ -62,7 +65,7 @@ function AuthenticatedLayout() {
         <nav className="flex-1 px-4">
           <Link
             to="/dashboard"
-            className="block rounded-lg bg-white/20 px-4 py-2 text-sm font-medium text-[#803A00] no-underline"
+            className="block rounded-lg bg-white/40 px-4 py-2 text-sm font-medium text-[#803A00] no-underline"
           >
             Mes fichiers
           </Link>
@@ -75,12 +78,12 @@ function AuthenticatedLayout() {
 
       <div className="flex flex-1 flex-col bg-[#FAF5F1]">
         <header className="flex items-center justify-end gap-6 bg-[#FFEEE3] border-b border-[#D8611C4A] px-8 py-4">
-          <Link
-            to="/dashboard"
-            className="rounded-sm bg-gray-900 px-5 py-2 text-sm font-medium text-white no-underline hover:bg-gray-800"
+          <button
+            onClick={() => setUploadOpen(true)}
+            className="rounded-sm bg-gray-900 px-5 py-2 text-sm font-medium text-white cursor-pointer border-none hover:bg-gray-800"
           >
             Ajouter des fichiers
-          </Link>
+          </button>
           <button
             onClick={() => {
               logout();
@@ -97,6 +100,8 @@ function AuthenticatedLayout() {
           <Outlet />
         </main>
       </div>
+
+      <UploadModal open={uploadOpen} onOpenChange={setUploadOpen} />
     </div>
   );
 }

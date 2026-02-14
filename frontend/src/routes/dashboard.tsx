@@ -1,17 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { ArrowRight, FileText, Lock, Trash2 } from "lucide-react";
 import { useState } from "react";
-
-type FileStatus = "active" | "expired";
-
-interface UserFile {
-  id: number;
-  name: string;
-  status: FileStatus;
-  expiresLabel: string;
-  hasPassword: boolean;
-  token: string;
-}
 
 type TabFilter = "all" | "active" | "expired";
 
@@ -26,13 +14,6 @@ export const Route = createFileRoute("/dashboard")({
 
 function DashboardComponent() {
   const [activeTab, setActiveTab] = useState<TabFilter>("all");
-
-  const files: UserFile[] = [];
-
-  const filteredFiles = files.filter((file) => {
-    if (activeTab === "all") return true;
-    return file.status === activeTab;
-  });
 
   const tabs: { key: TabFilter; label: string }[] = [
     { key: "all", label: "Tous" },
@@ -73,55 +54,7 @@ function DashboardComponent() {
       </div>
 
       <div className="space-y-3">
-        {filteredFiles.length === 0 ? (
-          <p className="text-sm text-gray-600">Aucun fichier à télécharger</p>
-        ) : (
-          filteredFiles.map((file) => <FileRow key={file.id} file={file} />)
-        )}
-      </div>
-    </div>
-  );
-}
-
-function FileRow({ file }: { file: UserFile }) {
-  const isExpired = file.status === "expired";
-
-  return (
-    <div
-      className={`flex items-center justify-between rounded-lg bg-white px-5 py-4 shadow-sm ${
-        isExpired ? "opacity-60" : ""
-      }`}
-    >
-      <div className="flex items-center gap-3">
-        <FileText className="h-5 w-5 text-gray-400" />
-        <div>
-          <p className="text-sm font-medium text-gray-900">{file.name}</p>
-          <p
-            className={`text-xs ${isExpired ? "text-gradient-end font-medium" : "text-gray-500"}`}
-          >
-            {file.expiresLabel}
-          </p>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3">
-        {isExpired ? (
-          <span className="text-xs text-gray-400 italic">
-            Ce fichier a expiré, il n'est plus stocké chez nous
-          </span>
-        ) : (
-          <>
-            {file.hasPassword && <Lock className="h-4 w-4 text-gray-400" />}
-            <button className="flex items-center gap-1 cursor-pointer rounded-lg border border-gradient-end bg-transparent px-3 py-1.5 text-xs font-medium text-gradient-end hover:opacity-80">
-              <Trash2 className="h-3.5 w-3.5" />
-              Supprimer
-            </button>
-            <button className="flex items-center gap-1 cursor-pointer rounded-lg border border-gradient-end bg-transparent px-3 py-1.5 text-xs font-medium text-gradient-end hover:opacity-80">
-              Accéder
-              <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          </>
-        )}
+        <p className="text-sm text-gray-600">Aucun fichier à télécharger</p>
       </div>
     </div>
   );
