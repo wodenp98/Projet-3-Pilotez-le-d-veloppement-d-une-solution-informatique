@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, redirect } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { useRegister } from "../api/auth";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,11 @@ import { Input } from "@/components/ui/input";
 import { type RegisterFormData, registerSchema } from "../schemas/auth";
 
 export const Route = createFileRoute("/register")({
+  beforeLoad: () => {
+    if (localStorage.getItem("token")) {
+      throw redirect({ to: "/dashboard" });
+    }
+  },
   component: RegisterComponent,
 });
 

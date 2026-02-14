@@ -35,9 +35,12 @@ function useRegister() {
   return useMutation({
     mutationFn: (data: AuthPayload) =>
       api.post<AuthResponse>("/auth/register", data).then((res) => res.data),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       localStorage.setItem("token", data.token);
-      router.navigate({ to: "/" });
+      window.dispatchEvent(new StorageEvent("storage"));
+
+      await router.invalidate();
+      await router.navigate({ to: "/dashboard" });
     },
     onError: (error) => {
       throw new Error(extractErrorMessage(error));
@@ -51,9 +54,12 @@ function useLogin() {
   return useMutation({
     mutationFn: (data: AuthPayload) =>
       api.post<AuthResponse>("/auth/login", data).then((res) => res.data),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       localStorage.setItem("token", data.token);
-      router.navigate({ to: "/" });
+      window.dispatchEvent(new StorageEvent("storage"));
+
+      await router.invalidate();
+      await router.navigate({ to: "/dashboard" });
     },
     onError: (error) => {
       throw new Error(extractErrorMessage(error));

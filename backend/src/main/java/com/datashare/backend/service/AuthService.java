@@ -1,6 +1,7 @@
 package com.datashare.backend.service;
 
 import com.datashare.backend.dto.AuthResponse;
+import com.datashare.backend.dto.LoginRequest;
 import com.datashare.backend.dto.RegisterRequest;
 import com.datashare.backend.entity.User;
 import com.datashare.backend.repository.UserRepository;
@@ -35,4 +36,15 @@ public class AuthService {
         return new AuthResponse(token);
     }
 
+    public AuthResponse login(LoginRequest request) {
+        User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
+
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw new IllegalArgumentException("Invalid credentials");
+        }
+
+        String token = jwtUtil.generateToken(user.getEmail());
+        return new AuthResponse(token);
+    }
 }
