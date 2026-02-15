@@ -1,18 +1,5 @@
 package com.datashare.backend.service;
 
-import com.datashare.backend.dto.FileInfoResponse;
-import com.datashare.backend.dto.FileUploadResponse;
-import com.datashare.backend.entity.FileEntity;
-import com.datashare.backend.entity.Tag;
-import com.datashare.backend.entity.User;
-import com.datashare.backend.repository.FileRepository;
-import com.datashare.backend.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -20,6 +7,20 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.datashare.backend.dto.FileInfoResponse;
+import com.datashare.backend.dto.FileUploadResponse;
+import com.datashare.backend.entity.FileEntity;
+import com.datashare.backend.entity.Tag;
+import com.datashare.backend.entity.User;
+import com.datashare.backend.repository.FileRepository;
+import com.datashare.backend.repository.UserRepository;
 
 @Service
 public class FileService {
@@ -106,6 +107,25 @@ public class FileService {
                 fileEntity.getPassword() != null,
                 tagNames
         );
+    }
+
+    public List<FileUploadResponse> getUserFiles(String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        return fileRepository.findByUserIdOrderByCreatedAtDesc(user.getId()).stream()
+                .map(f -> new FileUploadResponse(
+                        f.getId(),
+                        f.getName(),
+                        f.getType(),
+                        f.getSize(),
+                        f.getToken(),
+                        f.getCreatedAt(),
+                        f.getExpiredAt(),
+                        f.getPassword() != null,
+                        f.getTags().stream().map(Tag::getName).toList()
+                ))
+                .toList();
     }
 
     public FileInfoResponse getFileInfo(String token) {
