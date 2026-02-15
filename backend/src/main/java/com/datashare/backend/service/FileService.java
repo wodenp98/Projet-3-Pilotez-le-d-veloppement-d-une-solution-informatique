@@ -1,5 +1,6 @@
 package com.datashare.backend.service;
 
+import com.datashare.backend.dto.FileInfoResponse;
 import com.datashare.backend.dto.FileUploadResponse;
 import com.datashare.backend.entity.FileEntity;
 import com.datashare.backend.entity.Tag;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -104,6 +106,54 @@ public class FileService {
                 fileEntity.getPassword() != null,
                 tagNames
         );
+    }
+
+    public FileInfoResponse getFileInfo(String token) {
+        FileEntity fileEntity = fileRepository.findByToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("File not found"));
+
+        boolean expired = fileEntity.getExpiredAt().isBefore(LocalDateTime.now());
+
+        return new FileInfoResponse(
+                fileEntity.getName(),
+                fileEntity.getType(),
+                fileEntity.getSize(),
+                fileEntity.getExpiredAt(),
+                fileEntity.getPassword() != null,
+                expired
+        );
+    }
+
+    public Path downloadFile(String token, String password) {
+        FileEntity fileEntity = fileRepository.findByToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("File not found"));
+
+        if (fileEntity.getExpiredAt().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("File has expired");
+        }
+
+        if (fileEntity.getPassword() != null) {
+            if (password == null || password.isBlank()) {
+                throw new IllegalArgumentException("Password is required");
+            }
+            if (!passwordEncoder.matches(password, fileEntity.getPassword())) {
+                throw new IllegalArgumentException("Invalid password");
+            }
+        }
+
+        return storageService.load(fileEntity.getFilePath());
+    }
+
+    public String getFileName(String token) {
+        return fileRepository.findByToken(token)
+                .map(FileEntity::getName)
+                .orElseThrow(() -> new IllegalArgumentException("File not found"));
+    }
+
+    public String getFileContentType(String token) {
+        return fileRepository.findByToken(token)
+                .map(FileEntity::getType)
+                .orElseThrow(() -> new IllegalArgumentException("File not found"));
     }
 
     private void validateFile(MultipartFile file) {

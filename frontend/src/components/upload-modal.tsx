@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check, CloudUpload, Copy, FileText } from "lucide-react";
+import { Check, CloudUpload, Copy, File, FileAudio, FileImage, FileText, FileVideo } from "lucide-react";
 import { useRef, useState } from "react";
 import { type UploadResponse, useUploadFile } from "../api/files";
 
@@ -37,6 +37,14 @@ function formatExpiration(expirationDays: number): string {
 
 function getShareLink(token: string): string {
   return `${window.location.origin}/download/${token}`;
+}
+
+function FileIcon({ type, className }: { type: string; className?: string }) {
+  if (type.startsWith("image/")) return <FileImage className={className} />;
+  if (type.startsWith("video/")) return <FileVideo className={className} />;
+  if (type.startsWith("audio/")) return <FileAudio className={className} />;
+  if (type.startsWith("text/") || type === "application/pdf") return <FileText className={className} />;
+  return <File className={className} />;
 }
 
 const MAX_FILE_SIZE = 1024 * 1024 * 1024; // 1 Go
@@ -153,7 +161,7 @@ function UploadForm({
     <div className="min-w-0 space-y-6">
       {file ? (
         <div className="flex items-center gap-3">
-          <FileText className="h-10 w-10 shrink-0 text-gray-400" />
+          <FileIcon type={file.type} className="h-10 w-10 shrink-0 text-gray-400" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-gray-900">
               {file.name}
@@ -266,7 +274,7 @@ function SuccessView({
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <FileText className="h-10 w-10 shrink-0 text-gray-400" />
+        <FileIcon type={result.type} className="h-10 w-10 shrink-0 text-gray-400" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-gray-900">
             {result.name}
