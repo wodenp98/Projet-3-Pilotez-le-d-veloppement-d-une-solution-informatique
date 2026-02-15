@@ -25,23 +25,23 @@ function DashboardComponent() {
     <div>
       <h1 className="mb-6 text-2xl font-bold text-gray-900">Mes fichiers</h1>
 
-      <div className="mb-6 flex items-center rounded-full bg-[#FFC19129] border border-[#D7630B33] w-fit">
+      <div className="mb-6 flex h-8 items-center rounded-3xl bg-[#FFC19129] border border-[#D7630B33] w-full md:w-fit">
         {tabs.map((tab, index) => {
           const isActive = activeTab === tab.key;
           const isFirst = index === 0;
           const isLast = index === tabs.length - 1;
 
           const rounding = isFirst
-            ? "rounded-l-full"
+            ? "rounded-l-3xl"
             : isLast
-              ? "rounded-r-full"
+              ? "rounded-r-3xl"
               : "";
 
           return (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`cursor-pointer border-none px-8 py-2.5 text-sm font-medium transition-colors ${rounding} ${
+              className={`cursor-pointer border-none h-full px-6 md:px-8 text-xs font-medium transition-colors flex-1 md:flex-initial ${rounding} ${
                 isActive
                   ? "bg-[#E77A6E] text-white"
                   : "bg-transparent text-gray-900 hover:text-gray-700"

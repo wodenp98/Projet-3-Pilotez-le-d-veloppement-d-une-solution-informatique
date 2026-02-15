@@ -5,6 +5,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -17,6 +23,7 @@ import {
 import { Check, CloudUpload, Copy, File, FileAudio, FileImage, FileText, FileVideo } from "lucide-react";
 import { useRef, useState } from "react";
 import { type UploadResponse, useUploadFile } from "../api/files";
+import { useMediaQuery } from "../hooks/useMediaQuery";
 
 interface UploadModalProps {
   open: boolean;
@@ -57,6 +64,7 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
   const [uploadResult, setUploadResult] = useState<UploadResponse | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const upload = useUploadFile();
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
@@ -99,38 +107,54 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
     navigator.clipboard.writeText(getShareLink(uploadResult.token));
   };
 
-  return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="overflow-hidden rounded-2xl border-none p-8 sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-center text-2xl font-bold">
-            Ajouter un fichier
-          </DialogTitle>
-        </DialogHeader>
+  const content = uploadResult ? (
+    <SuccessView
+      result={uploadResult}
+      file={file}
+      expirationDays={expirationDays}
+      onCopyLink={handleCopyLink}
+    />
+  ) : (
+    <UploadForm
+      file={file}
+      fileError={fileError}
+      password={password}
+      expirationDays={expirationDays}
+      fileInputRef={fileInputRef}
+      upload={upload}
+      onFileChange={handleFileChange}
+      onPasswordChange={setPassword}
+      onExpirationChange={setExpirationDays}
+      onSubmit={handleSubmit}
+    />
+  );
 
-        {uploadResult ? (
-          <SuccessView
-            result={uploadResult}
-            file={file}
-            expirationDays={expirationDays}
-            onCopyLink={handleCopyLink}
-          />
-        ) : (
-          <UploadForm
-            file={file}
-            fileError={fileError}
-            password={password}
-            expirationDays={expirationDays}
-            fileInputRef={fileInputRef}
-            upload={upload}
-            onFileChange={handleFileChange}
-            onPasswordChange={setPassword}
-            onExpirationChange={setExpirationDays}
-            onSubmit={handleSubmit}
-          />
-        )}
-      </DialogContent>
-    </Dialog>
+  if (isDesktop) {
+    return (
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="overflow-hidden border-none p-8 sm:max-w-md sm:rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-center text-2xl font-bold">
+              Ajouter un fichier
+            </DialogTitle>
+          </DialogHeader>
+          {content}
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={handleClose}>
+      <SheetContent side="bottom" className="overflow-hidden rounded-t-2xl border-none p-6">
+        <SheetHeader>
+          <SheetTitle className="text-center text-2xl font-bold">
+            Ajouter un fichier
+          </SheetTitle>
+        </SheetHeader>
+        {content}
+      </SheetContent>
+    </Sheet>
   );
 }
 
