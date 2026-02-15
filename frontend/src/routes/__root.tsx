@@ -40,7 +40,10 @@ function PublicLayout() {
   return (
     <div className="flex min-h-screen flex-col bg-[linear-gradient(172.84deg,var(--color-gradient-start)_2.29%,var(--color-gradient-end)_97.71%)]">
       <header className="flex items-center justify-between px-4 sm:px-8 md:px-20 py-4">
-        <Link to="/" className="text-xl sm:text-2xl font-bold text-black no-underline">
+        <Link
+          to="/"
+          className="text-xl sm:text-2xl font-bold text-black no-underline"
+        >
           DataShare
         </Link>
         <Link
@@ -69,7 +72,6 @@ function AuthenticatedLayout() {
 
   return (
     <div className="flex min-h-screen">
-      {/* Mobile overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 md:hidden"
@@ -77,7 +79,6 @@ function AuthenticatedLayout() {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 flex w-56 flex-col bg-[linear-gradient(172.84deg,var(--color-gradient-start)_2.29%,var(--color-gradient-end)_97.71%)] transition-transform duration-200 md:static md:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
