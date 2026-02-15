@@ -1,4 +1,9 @@
-import { Link, Outlet, createRootRoute } from "@tanstack/react-router";
+import {
+  Link,
+  Outlet,
+  createRootRoute,
+  useMatchRoute,
+} from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { LogOut } from "lucide-react";
 import { useState } from "react";
@@ -11,6 +16,17 @@ export const Route = createRootRoute({
 
 function RootComponent() {
   const { isAuthenticated } = useAuth();
+  const matchRoute = useMatchRoute();
+  const isDownloadRoute = matchRoute({ to: "/download/$token", fuzzy: true });
+
+  if (isDownloadRoute) {
+    return (
+      <>
+        <Outlet />
+        <TanStackRouterDevtools position="bottom-right" />
+      </>
+    );
+  }
 
   return (
     <>

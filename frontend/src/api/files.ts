@@ -1,4 +1,5 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import api from "./axios";
 
 interface UploadPayload {
@@ -37,5 +38,54 @@ function useUploadFile() {
   });
 }
 
-export { useUploadFile };
-export type { UploadResponse };
+interface FileInfoResponse {
+  name: string;
+  type: string;
+  size: number;
+  expiredAt: string;
+  passwordProtected: boolean;
+  expired: boolean;
+}
+
+function useFileInfo(token: string) {
+  return useQuery({
+    queryKey: ["file-info", token],
+    queryFn: () =>
+      api.get<FileInfoResponse>(`/files/download/${token}`).then((res) => res.data),
+  });
+}
+
+function useDownloadFile() {
+  return useMutation({
+    mutationFn: async ({ token, password, fileName }: { token: string; password?: string; fileName: string }) => {
+      const params = new URLSearchParams();
+      if (password) params.append("password", password);
+
+      try {
+        const response = await api.post(`/files/download/${token}`, null, {
+          params,
+          responseType: "blob",
+        });
+
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        if (axios.isAxiosError(err) && err.response?.data instanceof Blob) {
+          const text = await err.response.data.text();
+          const parsed = JSON.parse(text);
+          throw new Error(parsed.error || "Une erreur est survenue");
+        }
+        throw err;
+      }
+    },
+  });
+}
+
+export { useUploadFile, useFileInfo, useDownloadFile };
+export type { UploadResponse, FileInfoResponse };
