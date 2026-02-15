@@ -101,7 +101,7 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="overflow-hidden rounded-2xl border-none p-8 sm:max-w-md">
+      <DialogContent className="overflow-hidden border-none p-6 sm:p-8 top-auto bottom-0 left-0 translate-x-0 translate-y-0 max-w-full rounded-t-2xl rounded-b-none data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom data-[state=closed]:zoom-out-100 data-[state=open]:zoom-in-100 sm:top-[50%] sm:bottom-auto sm:left-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:max-w-md sm:rounded-2xl sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=open]:slide-in-from-bottom-0">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl font-bold">
             Ajouter un fichier
