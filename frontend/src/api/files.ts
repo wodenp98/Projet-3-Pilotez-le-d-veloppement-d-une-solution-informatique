@@ -87,5 +87,13 @@ function useDownloadFile() {
   });
 }
 
-export { useUploadFile, useFileInfo, useDownloadFile };
+function useUserFiles() {
+  return useQuery({
+    queryKey: ["user-files"],
+    queryFn: () =>
+      api.get<UploadResponse[]>("/files").then((res) => res.data),
+  });
+}
+
+export { useUploadFile, useFileInfo, useDownloadFile, useUserFiles };
 export type { UploadResponse, FileInfoResponse };

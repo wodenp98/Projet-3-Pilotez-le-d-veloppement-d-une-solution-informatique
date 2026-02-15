@@ -1,8 +1,9 @@
 package com.datashare.backend.controller;
 
-import com.datashare.backend.dto.FileInfoResponse;
-import com.datashare.backend.dto.FileUploadResponse;
-import com.datashare.backend.service.FileService;
+import java.net.MalformedURLException;
+import java.nio.file.Path;
+import java.util.List;
+
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -10,12 +11,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.net.MalformedURLException;
-import java.nio.file.Path;
-import java.util.List;
+import com.datashare.backend.dto.FileInfoResponse;
+import com.datashare.backend.dto.FileUploadResponse;
+import com.datashare.backend.service.FileService;
 
 @RestController
 @RequestMapping("/api/files")
@@ -38,6 +44,13 @@ public class FileController {
         String userEmail = authentication.getName();
         FileUploadResponse response = fileService.upload(file, userEmail, expirationDays, password, tags);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<FileUploadResponse>> getUserFiles(Authentication authentication) {
+        String userEmail = authentication.getName();
+        List<FileUploadResponse> files = fileService.getUserFiles(userEmail);
+        return ResponseEntity.ok(files);
     }
 
     @GetMapping("/download/{token}")
