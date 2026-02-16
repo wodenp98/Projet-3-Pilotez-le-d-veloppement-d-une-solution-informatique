@@ -189,4 +189,20 @@ public class FileService {
             }
         }
     }
+
+    @Transactional
+    public void deleteFile(Long fileId, String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        FileEntity fileEntity = fileRepository.findById(fileId)
+                .orElseThrow(() -> new IllegalArgumentException("File not found"));
+
+        if (!fileEntity.getUser().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("You can only delete your own files");
+        }
+
+        storageService.delete(fileEntity.getFilePath());
+        fileRepository.delete(fileEntity);
+    }
 }

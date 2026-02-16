@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import api from "./axios";
 
@@ -51,13 +51,23 @@ function useFileInfo(token: string) {
   return useQuery({
     queryKey: ["file-info", token],
     queryFn: () =>
-      api.get<FileInfoResponse>(`/files/download/${token}`).then((res) => res.data),
+      api
+        .get<FileInfoResponse>(`/files/download/${token}`)
+        .then((res) => res.data),
   });
 }
 
 function useDownloadFile() {
   return useMutation({
-    mutationFn: async ({ token, password, fileName }: { token: string; password?: string; fileName: string }) => {
+    mutationFn: async ({
+      token,
+      password,
+      fileName,
+    }: {
+      token: string;
+      password?: string;
+      fileName: string;
+    }) => {
       const params = new URLSearchParams();
       if (password) params.append("password", password);
 
@@ -90,10 +100,26 @@ function useDownloadFile() {
 function useUserFiles() {
   return useQuery({
     queryKey: ["user-files"],
-    queryFn: () =>
-      api.get<UploadResponse[]>("/files").then((res) => res.data),
+    queryFn: () => api.get<UploadResponse[]>("/files").then((res) => res.data),
   });
 }
 
-export { useUploadFile, useFileInfo, useDownloadFile, useUserFiles };
-export type { UploadResponse, FileInfoResponse };
+function useDeleteFile() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (fileId: number) =>
+      api.delete(`/files/${fileId}`).then((res) => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-files"] });
+    },
+  });
+}
+
+export {
+  useDeleteFile,
+  useDownloadFile,
+  useFileInfo,
+  useUploadFile,
+  useUserFiles,
+};
+export type { FileInfoResponse, UploadResponse };

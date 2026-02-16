@@ -4,7 +4,6 @@ import {
   createRootRoute,
   useMatchRoute,
 } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { CloudUpload, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { UploadModal } from "../components/upload-modal";
@@ -23,17 +22,11 @@ function RootComponent() {
     return (
       <>
         <Outlet />
-        <TanStackRouterDevtools position="bottom-right" />
       </>
     );
   }
 
-  return (
-    <>
-      {isAuthenticated ? <AuthenticatedLayout /> : <PublicLayout />}
-      <TanStackRouterDevtools position="bottom-right" />
-    </>
-  );
+  return <>{isAuthenticated ? <AuthenticatedLayout /> : <PublicLayout />}</>;
 }
 
 function PublicLayout() {
