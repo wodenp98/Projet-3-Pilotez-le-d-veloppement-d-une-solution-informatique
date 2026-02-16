@@ -1,8 +1,18 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Download, File, FileAudio, FileImage, FileText, FileVideo, Info } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  AlertTriangle,
+  Download,
+  File,
+  FileAudio,
+  FileImage,
+  FileText,
+  FileVideo,
+  Info,
+  OctagonAlert,
+} from "lucide-react";
 import { useState } from "react";
 import { useDownloadFile, useFileInfo } from "../api/files";
 
@@ -20,19 +30,23 @@ function FileIcon({ type, className }: { type: string; className?: string }) {
   if (type.startsWith("image/")) return <FileImage className={className} />;
   if (type.startsWith("video/")) return <FileVideo className={className} />;
   if (type.startsWith("audio/")) return <FileAudio className={className} />;
-  if (type.startsWith("text/") || type === "application/pdf") return <FileText className={className} />;
+  if (type.startsWith("text/") || type === "application/pdf")
+    return <FileText className={className} />;
   return <File className={className} />;
 }
 
-function formatExpirationDays(expiredAt: string): string {
+function getExpirationDays(expiredAt: string): number {
   const now = new Date();
   const expDate = new Date(expiredAt);
   const diffMs = expDate.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+}
 
-  if (diffDays <= 0) return "Ce fichier a expiré.";
-  if (diffDays === 1) return "Ce fichier expirera demain.";
-  return `Ce fichier expirera dans ${diffDays} jours.`;
+function formatExpirationDays(days: number): string {
+  if (days <= 0)
+    return "Ce fichier n'est plus disponible en téléchargement car il a expiré.";
+  if (days === 1) return "Ce fichier expirera demain.";
+  return `Ce fichier expirera dans ${days} jours.`;
 }
 
 function DownloadPage() {
@@ -67,6 +81,10 @@ function DownloadPage() {
     );
   }
 
+  const expirationDays = getExpirationDays(fileInfo.expiredAt);
+  const isExpired = expirationDays <= 0;
+  const isExpiringSoon = expirationDays === 1;
+
   const canDownload =
     !fileInfo.expired &&
     (!fileInfo.passwordProtected || password.length > 0) &&
@@ -88,7 +106,10 @@ function DownloadPage() {
         </h2>
 
         <div className="flex items-center gap-3">
-          <FileIcon type={fileInfo.type} className="h-10 w-10 shrink-0 text-gray-900" />
+          <FileIcon
+            type={fileInfo.type}
+            className="h-10 w-10 shrink-0 text-gray-900"
+          />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-gray-900">
               {fileInfo.name}
@@ -99,10 +120,32 @@ function DownloadPage() {
           </div>
         </div>
 
-        <div className="flex items-start gap-2 rounded-lg bg-blue-50 px-4 py-3">
-          <Info className="h-4 w-4 shrink-0 text-blue-500 mt-0.5" />
-          <p className="text-sm text-blue-700">
-            {formatExpirationDays(fileInfo.expiredAt)}
+        <div
+          className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 ${
+            isExpired
+              ? "border-[#E5B5B5] bg-[#FFEDED]"
+              : isExpiringSoon
+                ? "border-[#E6CBB5] bg-[#FFF5ED]"
+                : "border-[#B1C9F5] bg-[#E2ECFF]"
+          }`}
+        >
+          {isExpired ? (
+            <OctagonAlert className="h-4 w-4 shrink-0 text-[#9C3333]" />
+          ) : isExpiringSoon ? (
+            <AlertTriangle className="h-4 w-4 shrink-0 text-[#AA642B]" />
+          ) : (
+            <Info className="h-4 w-4 shrink-0 text-[#2A3F72]" />
+          )}
+          <p
+            className={`text-sm ${
+              isExpired
+                ? "text-[#9C3333]"
+                : isExpiringSoon
+                  ? "text-[#AA642B]"
+                  : "text-[#2A3F72]"
+            }`}
+          >
+            {formatExpirationDays(expirationDays)}
           </p>
         </div>
 
