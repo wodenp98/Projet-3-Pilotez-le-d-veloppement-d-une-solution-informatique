@@ -60,7 +60,7 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [password, setPassword] = useState("");
-  const [expirationDays, setExpirationDays] = useState(1);
+  const [expirationDays, setExpirationDays] = useState(7);
   const [uploadResult, setUploadResult] = useState<UploadResponse | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const upload = useUploadFile();
