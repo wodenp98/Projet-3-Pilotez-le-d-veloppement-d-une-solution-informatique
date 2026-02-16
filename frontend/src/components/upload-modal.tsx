@@ -20,7 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check, CloudUpload, Copy, File, FileAudio, FileImage, FileText, FileVideo } from "lucide-react";
+import { Check, CloudUpload, Copy, File, FileAudio, FileImage, FileText, FileVideo, X } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { type UploadResponse, useUploadFile } from "../api/files";
 import { useMediaQuery } from "../hooks/useMediaQuery";
@@ -55,20 +56,31 @@ function FileIcon({ type, className }: { type: string; className?: string }) {
 }
 
 const MAX_FILE_SIZE = 1024 * 1024 * 1024; // 1 Go
+const FORBIDDEN_EXTENSIONS = new Set(["exe", "bat", "cmd", "sh", "msi", "com", "scr", "ps1", "vbs"]);
 
 export function UploadModal({ open, onOpenChange }: UploadModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [password, setPassword] = useState("");
-  const [expirationDays, setExpirationDays] = useState(1);
+  const [expirationDays, setExpirationDays] = useState(7);
+  const [tags, setTags] = useState<string[]>([]);
   const [uploadResult, setUploadResult] = useState<UploadResponse | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const upload = useUploadFile();
+  const queryClient = useQueryClient();
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     if (!selected) return;
+    const ext = selected.name.includes(".")
+      ? selected.name.substring(selected.name.lastIndexOf(".") + 1).toLowerCase()
+      : "";
+    if (FORBIDDEN_EXTENSIONS.has(ext)) {
+      setFileError(`Les fichiers .${ext} ne sont pas autorisés`);
+      setFile(null);
+      return;
+    }
     if (selected.size > MAX_FILE_SIZE) {
       setFileError("Le fichier dépasse la taille maximale de 1 Go");
       setFile(null);
@@ -78,13 +90,21 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
     setFile(selected);
   };
 
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
   const handleSubmit = () => {
     if (!file) return;
+    if (password && password.length < 6) {
+      setPasswordError("Le mot de passe doit contenir au moins 6 caractères");
+      return;
+    }
+    setPasswordError(null);
     upload.mutate(
-      { file, password: password || undefined, expirationDays },
+      { file, password: password || undefined, expirationDays, tags: tags.length > 0 ? tags : undefined },
       {
         onSuccess: (data) => {
           setUploadResult(data);
+          queryClient.invalidateQueries({ queryKey: ["user-files"] });
         },
       },
     );
@@ -95,7 +115,9 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
       setFile(null);
       setFileError(null);
       setPassword("");
-      setExpirationDays(1);
+      setPasswordError(null);
+      setExpirationDays(7);
+      setTags([]);
       setUploadResult(null);
       upload.reset();
     }
@@ -119,12 +141,15 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
       file={file}
       fileError={fileError}
       password={password}
+      passwordError={passwordError}
       expirationDays={expirationDays}
+      tags={tags}
       fileInputRef={fileInputRef}
       upload={upload}
       onFileChange={handleFileChange}
       onPasswordChange={setPassword}
       onExpirationChange={setExpirationDays}
+      onTagsChange={setTags}
       onSubmit={handleSubmit}
     />
   );
@@ -162,23 +187,29 @@ function UploadForm({
   file,
   fileError,
   password,
+  passwordError,
   expirationDays,
+  tags,
   fileInputRef,
   upload,
   onFileChange,
   onPasswordChange,
   onExpirationChange,
+  onTagsChange,
   onSubmit,
 }: {
   file: File | null;
   fileError: string | null;
   password: string;
+  passwordError: string | null;
   expirationDays: number;
+  tags: string[];
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   upload: ReturnType<typeof useUploadFile>;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onPasswordChange: (v: string) => void;
   onExpirationChange: (v: number) => void;
+  onTagsChange: (v: string[]) => void;
   onSubmit: () => void;
 }) {
   return (
@@ -229,6 +260,9 @@ function UploadForm({
           value={password}
           onChange={(e) => onPasswordChange(e.target.value)}
         />
+        {passwordError && (
+          <p className="text-xs text-red-500">{passwordError}</p>
+        )}
       </div>
 
       <div className="space-y-1">
@@ -247,6 +281,42 @@ function UploadForm({
             <SelectItem value="7">Une semaine</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="space-y-1">
+        <Label>Tags</Label>
+        <Input
+          placeholder="Ajouter un tag puis Entrée"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              const value = e.currentTarget.value.trim();
+              if (value && value.length <= 30 && !tags.includes(value)) {
+                onTagsChange([...tags, value]);
+                e.currentTarget.value = "";
+              }
+            }
+          }}
+        />
+        {tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {tags.map((tag, index) => (
+              <span
+                key={index}
+                className="flex items-center gap-1 rounded-full bg-btn-login-bg px-2.5 py-0.5 text-xs text-btn-login-text"
+              >
+                {tag}
+                <button
+                  type="button"
+                  onClick={() => onTagsChange(tags.filter((_, i) => i !== index))}
+                  className="cursor-pointer border-none bg-transparent p-0 text-btn-login-text hover:opacity-60"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {upload.isError && (

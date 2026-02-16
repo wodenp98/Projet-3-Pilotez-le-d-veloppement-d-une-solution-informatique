@@ -30,6 +30,7 @@ function RegisterComponent() {
   });
 
   const onSubmit = (data: RegisterFormData) => {
+    register.reset();
     register.mutate({ email: data.email, password: data.password });
   };
 
@@ -43,7 +44,7 @@ function RegisterComponent() {
 
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} onChange={() => register.isError && register.reset()} className="space-y-4">
             <FormField
               control={form.control}
               name="email"

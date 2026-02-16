@@ -1,4 +1,3 @@
-import { Link, createFileRoute, redirect } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Link, createFileRoute, redirect } from "@tanstack/react-router";
 import {
   ArrowRight,
   File,
@@ -27,6 +27,8 @@ interface UserFile {
   id: number;
   name: string;
   type: string;
+  size: number;
+  createdAt: string;
   status: FileStatus;
   expiresLabel: string;
   hasPassword: boolean;
@@ -53,6 +55,20 @@ export const Route = createFileRoute("/dashboard")({
   component: DashboardComponent,
 });
 
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} o`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
+}
+
+function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 function formatExpiresLabel(expiredAt: string): string {
   const now = new Date();
   const expDate = new Date(expiredAt);
@@ -73,6 +89,8 @@ function toUserFile(file: UploadResponse): UserFile {
     id: file.id,
     name: file.name,
     type: file.type,
+    size: file.size,
+    createdAt: file.createdAt,
     status,
     expiresLabel: formatExpiresLabel(file.expiredAt),
     hasPassword: file.passwordProtected,
@@ -154,16 +172,20 @@ function FileRow({ file }: { file: UserFile }) {
   return (
     <>
       <div
-        className={`flex items-center justify-between rounded-lg bg-white px-5 py-4 shadow-sm ${
+        className={`flex items-center justify-between rounded-lg border border-[#D7630B33] bg-[#FFC1910D] px-5 py-2 ${
           isExpired ? "opacity-60" : ""
         }`}
       >
         <div className="flex items-center gap-3">
-          <FileIcon type={file.type} className="h-5 w-5 text-gray-400" />
+          <FileIcon type={file.type} className="h-8 w-8 text-black" />
           <div>
-            <p className="text-sm font-medium text-gray-900">{file.name}</p>
+            <p className="text-sm font-medium text-black">{file.name}</p>
+            <p className="text-xs text-black">
+              {formatFileSize(file.size)} · Envoyé le{" "}
+              {formatDate(file.createdAt)}
+            </p>
             <p
-              className={`text-xs ${isExpired ? "text-gradient-end font-medium" : "text-gray-500"}`}
+              className={`text-xs ${isExpired ? "text-gradient-end font-medium" : "text-black"}`}
             >
               {file.expiresLabel}
             </p>
@@ -172,15 +194,15 @@ function FileRow({ file }: { file: UserFile }) {
 
         <div className="flex items-center gap-3">
           {isExpired ? (
-            <span className="text-xs text-gray-400 italic">
+            <span className="text-xs text-gray-400">
               Ce fichier a expiré, il n'est plus stocké chez nous
             </span>
           ) : (
             <>
-              {file.hasPassword && <Lock className="h-4 w-4 text-gray-400" />}
+              {file.hasPassword && <Lock className="h-4 w-4 text-black" />}
               <button
                 onClick={() => setConfirmOpen(true)}
-                className="flex items-center gap-1 cursor-pointer rounded-lg border border-gradient-end bg-transparent px-3 py-1.5 text-xs font-medium text-gradient-end hover:opacity-80"
+                className="flex items-center gap-1 cursor-pointer rounded-lg border border-[#FFA569] bg-transparent px-3 py-1.5 text-xs font-medium text-link-create-account hover:opacity-80"
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 Supprimer
@@ -188,7 +210,7 @@ function FileRow({ file }: { file: UserFile }) {
               <Link
                 to="/download/$token"
                 params={{ token: file.token }}
-                className="flex items-center gap-1 no-underline rounded-lg border border-gradient-end bg-transparent px-3 py-1.5 text-xs font-medium text-gradient-end hover:opacity-80"
+                className="flex items-center gap-1 no-underline rounded-lg border border-[#FFA569] bg-transparent px-3 py-1.5 text-xs font-medium text-link-create-account hover:opacity-80"
               >
                 Accéder
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -209,10 +231,7 @@ function FileRow({ file }: { file: UserFile }) {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setConfirmOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
               Annuler
             </Button>
             <Button

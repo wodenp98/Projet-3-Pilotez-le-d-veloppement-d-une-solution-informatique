@@ -13,7 +13,7 @@ interface AuthResponse {
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
-  "Email already exists": "Cette adresse email est deja utilisee",
+  "Email already exists": "Cette adresse email est déjà utilisée",
 };
 
 function extractErrorMessage(error: unknown): string {
@@ -33,17 +33,20 @@ function useRegister() {
   const router = useRouter();
 
   return useMutation({
-    mutationFn: (data: AuthPayload) =>
-      api.post<AuthResponse>("/auth/register", data).then((res) => res.data),
+    mutationFn: async (data: AuthPayload) => {
+      try {
+        const res = await api.post<AuthResponse>("/auth/register", data);
+        return res.data;
+      } catch (error) {
+        throw new Error(extractErrorMessage(error));
+      }
+    },
     onSuccess: async (data) => {
       localStorage.setItem("token", data.token);
       window.dispatchEvent(new StorageEvent("storage"));
 
       await router.invalidate();
       await router.navigate({ to: "/dashboard" });
-    },
-    onError: (error) => {
-      throw new Error(extractErrorMessage(error));
     },
   });
 }
@@ -52,8 +55,14 @@ function useLogin() {
   const router = useRouter();
 
   return useMutation({
-    mutationFn: (data: AuthPayload) =>
-      api.post<AuthResponse>("/auth/login", data).then((res) => res.data),
+    mutationFn: async (data: AuthPayload) => {
+      try {
+        const res = await api.post<AuthResponse>("/auth/login", data);
+        return res.data;
+      } catch (error) {
+        throw new Error(extractErrorMessage(error));
+      }
+    },
     onSuccess: async (data) => {
       localStorage.setItem("token", data.token);
       window.dispatchEvent(new StorageEvent("storage"));
@@ -61,10 +70,7 @@ function useLogin() {
       await router.invalidate();
       await router.navigate({ to: "/dashboard" });
     },
-    onError: (error) => {
-      throw new Error(extractErrorMessage(error));
-    },
   });
 }
 
-export { useRegister, useLogin };
+export { useLogin, useRegister };

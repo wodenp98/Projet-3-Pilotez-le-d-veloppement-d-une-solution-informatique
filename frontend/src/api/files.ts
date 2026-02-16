@@ -6,6 +6,7 @@ interface UploadPayload {
   file: File;
   password?: string;
   expirationDays: number;
+  tags?: string[];
 }
 
 interface UploadResponse {
@@ -28,6 +29,9 @@ function useUploadFile() {
       formData.append("expirationDays", String(data.expirationDays));
       if (data.password) {
         formData.append("password", data.password);
+      }
+      if (data.tags) {
+        data.tags.forEach((tag) => formData.append("tags", tag));
       }
       return api
         .post<UploadResponse>("/files", formData, {
