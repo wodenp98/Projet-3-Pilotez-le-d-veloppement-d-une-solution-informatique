@@ -90,8 +90,15 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
     setFile(selected);
   };
 
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
   const handleSubmit = () => {
     if (!file) return;
+    if (password && password.length < 6) {
+      setPasswordError("Le mot de passe doit contenir au moins 6 caractères");
+      return;
+    }
+    setPasswordError(null);
     upload.mutate(
       { file, password: password || undefined, expirationDays, tags: tags.length > 0 ? tags : undefined },
       {
@@ -108,6 +115,7 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
       setFile(null);
       setFileError(null);
       setPassword("");
+      setPasswordError(null);
       setExpirationDays(7);
       setTags([]);
       setUploadResult(null);
@@ -133,6 +141,7 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
       file={file}
       fileError={fileError}
       password={password}
+      passwordError={passwordError}
       expirationDays={expirationDays}
       tags={tags}
       fileInputRef={fileInputRef}
@@ -178,6 +187,7 @@ function UploadForm({
   file,
   fileError,
   password,
+  passwordError,
   expirationDays,
   tags,
   fileInputRef,
@@ -191,6 +201,7 @@ function UploadForm({
   file: File | null;
   fileError: string | null;
   password: string;
+  passwordError: string | null;
   expirationDays: number;
   tags: string[];
   fileInputRef: React.RefObject<HTMLInputElement | null>;
@@ -249,6 +260,9 @@ function UploadForm({
           value={password}
           onChange={(e) => onPasswordChange(e.target.value)}
         />
+        {passwordError && (
+          <p className="text-xs text-red-500">{passwordError}</p>
+        )}
       </div>
 
       <div className="space-y-1">
