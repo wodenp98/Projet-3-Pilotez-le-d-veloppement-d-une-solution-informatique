@@ -58,6 +58,7 @@ function useFileInfo(token: string) {
       api
         .get<FileInfoResponse>(`/files/download/${token}`)
         .then((res) => res.data),
+    retry: false,
   });
 }
 

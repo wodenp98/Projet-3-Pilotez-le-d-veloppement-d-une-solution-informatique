@@ -24,9 +24,10 @@ function HomeComponent() {
       <button
         onClick={() => setUploadOpen(true)}
         className="relative flex cursor-pointer items-center justify-center border-none bg-transparent"
+        aria-label="Uploader un fichier"
       >
-        <div className="absolute h-20 w-20 sm:h-26 sm:w-26 rounded-full bg-black/20" />
-        <div className="relative flex h-14 w-14 sm:h-18 sm:w-18 items-center justify-center rounded-full bg-black">
+        <div className="absolute h-20 w-20 sm:h-26 sm:w-26 rounded-full bg-black/20" aria-hidden="true" />
+        <div className="relative flex h-14 w-14 sm:h-18 sm:w-18 items-center justify-center rounded-full bg-black" aria-hidden="true">
           <CloudUpload className="h-8 w-8 sm:h-10 sm:w-10 text-white" strokeWidth={1.5} />
         </div>
       </button>
