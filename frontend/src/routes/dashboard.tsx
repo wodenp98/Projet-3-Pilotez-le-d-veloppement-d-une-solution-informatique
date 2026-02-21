@@ -1,48 +1,8 @@
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Link, createFileRoute, redirect } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  File,
-  FileAudio,
-  FileImage,
-  FileText,
-  FileVideo,
-  Lock,
-  Trash2,
-} from "lucide-react";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
-import { useDeleteFile, useUserFiles, type UploadResponse } from "../api/files";
-
-type FileStatus = "active" | "expired";
-
-interface UserFile {
-  id: number;
-  name: string;
-  type: string;
-  size: number;
-  createdAt: string;
-  status: FileStatus;
-  expiresLabel: string;
-  hasPassword: boolean;
-  token: string;
-}
-
-function FileIcon({ type, className }: { type: string; className?: string }) {
-  if (type.startsWith("image/")) return <FileImage className={className} />;
-  if (type.startsWith("video/")) return <FileVideo className={className} />;
-  if (type.startsWith("audio/")) return <FileAudio className={className} />;
-  if (type.startsWith("text/") || type === "application/pdf")
-    return <FileText className={className} />;
-  return <File className={className} />;
-}
+import { useUserFiles } from "../api/files";
+import { FileRow } from "../components/file-row";
+import { toUserFile, type UserFile } from "../lib/user-file";
 
 type TabFilter = "all" | "active" | "expired";
 
@@ -54,49 +14,6 @@ export const Route = createFileRoute("/dashboard")({
   },
   component: DashboardComponent,
 });
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} o`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
-}
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("fr-FR", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function formatExpiresLabel(expiredAt: string): string {
-  const now = new Date();
-  const expDate = new Date(expiredAt);
-  const diffMs = expDate.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffDays <= 0) return "Expiré";
-  if (diffDays === 1) return "Expire demain";
-  return `Expire dans ${diffDays} jours`;
-}
-
-function toUserFile(file: UploadResponse): UserFile {
-  const now = new Date();
-  const expDate = new Date(file.expiredAt);
-  const status: FileStatus = expDate <= now ? "expired" : "active";
-
-  return {
-    id: file.id,
-    name: file.name,
-    type: file.type,
-    size: file.size,
-    createdAt: file.createdAt,
-    status,
-    expiresLabel: formatExpiresLabel(file.expiredAt),
-    hasPassword: file.passwordProtected,
-    token: file.token,
-  };
-}
 
 function DashboardComponent() {
   const [activeTab, setActiveTab] = useState<TabFilter>("all");
@@ -155,95 +72,5 @@ function DashboardComponent() {
         )}
       </div>
     </div>
-  );
-}
-
-function FileRow({ file }: { file: UserFile }) {
-  const isExpired = file.status === "expired";
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const deleteFile = useDeleteFile();
-
-  const handleDelete = () => {
-    deleteFile.mutate(file.id, {
-      onSuccess: () => setConfirmOpen(false),
-    });
-  };
-
-  return (
-    <>
-      <div
-        className={`flex items-center justify-between rounded-lg border border-[#D7630B33] bg-[#FFC1910D] px-5 py-2 ${
-          isExpired ? "opacity-60" : ""
-        }`}
-      >
-        <div className="flex items-center gap-3">
-          <FileIcon type={file.type} className="h-8 w-8 text-black" />
-          <div>
-            <p className="text-sm font-medium text-black">{file.name}</p>
-            <p className="text-xs text-black">
-              {formatFileSize(file.size)} · Envoyé le{" "}
-              {formatDate(file.createdAt)}
-            </p>
-            <p
-              className={`text-xs ${isExpired ? "text-gradient-end font-medium" : "text-black"}`}
-            >
-              {file.expiresLabel}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {isExpired ? (
-            <span className="text-xs text-gray-400">
-              Ce fichier a expiré, il n'est plus stocké chez nous
-            </span>
-          ) : (
-            <>
-              {file.hasPassword && <Lock className="h-4 w-4 text-black" />}
-              <button
-                onClick={() => setConfirmOpen(true)}
-                className="flex items-center gap-1 cursor-pointer rounded-lg border border-[#FFA569] bg-transparent px-3 py-1.5 text-xs font-medium text-link-create-account hover:opacity-80"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                Supprimer
-              </button>
-              <Link
-                to="/download/$token"
-                params={{ token: file.token }}
-                className="flex items-center gap-1 no-underline rounded-lg border border-[#FFA569] bg-transparent px-3 py-1.5 text-xs font-medium text-link-create-account hover:opacity-80"
-              >
-                Accéder
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </>
-          )}
-        </div>
-      </div>
-
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Supprimer le fichier</DialogTitle>
-            <DialogDescription>
-              Es-tu sûr de vouloir supprimer{" "}
-              <span className="font-medium text-gray-900">{file.name}</span> ?
-              Cette action est irréversible.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
-              Annuler
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={deleteFile.isPending}
-            >
-              {deleteFile.isPending ? "Suppression..." : "Supprimer"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
   );
 }

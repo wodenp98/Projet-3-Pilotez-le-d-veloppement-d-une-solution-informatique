@@ -5,49 +5,22 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
   Download,
-  File,
-  FileAudio,
-  FileImage,
-  FileText,
-  FileVideo,
   Info,
   OctagonAlert,
 } from "lucide-react";
 import { useState } from "react";
 import { useDownloadFile, useFileInfo } from "../api/files";
+import { DownloadLayout } from "../components/layouts/download-layout";
+import { FileIcon } from "../components/file-icon";
+import {
+  formatExpirationDays,
+  formatFileSize,
+  getExpirationDays,
+} from "../lib/formatters";
 
 export const Route = createFileRoute("/download/$token")({
   component: DownloadPage,
 });
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} o`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
-}
-
-function FileIcon({ type, className }: { type: string; className?: string }) {
-  if (type.startsWith("image/")) return <FileImage className={className} />;
-  if (type.startsWith("video/")) return <FileVideo className={className} />;
-  if (type.startsWith("audio/")) return <FileAudio className={className} />;
-  if (type.startsWith("text/") || type === "application/pdf")
-    return <FileText className={className} />;
-  return <File className={className} />;
-}
-
-function getExpirationDays(expiredAt: string): number {
-  const now = new Date();
-  const expDate = new Date(expiredAt);
-  const diffMs = expDate.getTime() - now.getTime();
-  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-}
-
-function formatExpirationDays(days: number): string {
-  if (days <= 0)
-    return "Ce fichier n'est plus disponible en téléchargement car il a expiré.";
-  if (days === 1) return "Ce fichier expirera demain.";
-  return `Ce fichier expirera dans ${days} jours.`;
-}
 
 function DownloadPage() {
   const { token } = Route.useParams();
@@ -151,8 +124,9 @@ function DownloadPage() {
 
         {fileInfo.passwordProtected && !fileInfo.expired && (
           <div className="space-y-1">
-            <Label>Mot de passe</Label>
+            <Label htmlFor="download-password">Mot de passe</Label>
             <Input
+              id="download-password"
               type="password"
               placeholder="Saisissez le mot de passe..."
               value={password}
@@ -188,27 +162,5 @@ function DownloadPage() {
         )}
       </div>
     </DownloadLayout>
-  );
-}
-
-function DownloadLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex min-h-screen flex-col bg-[linear-gradient(172.84deg,var(--color-gradient-start)_2.29%,var(--color-gradient-end)_97.71%)]">
-      <header className="flex items-center justify-between px-20 py-4">
-        <Link to="/" className="text-2xl font-bold text-black no-underline">
-          DataShare
-        </Link>
-      </header>
-
-      <main className="flex flex-1 items-center justify-center px-4">
-        <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
-          {children}
-        </div>
-      </main>
-
-      <footer className="py-6 text-start ml-20 text-sm text-white">
-        Copyright DataShare© 2025
-      </footer>
-    </div>
   );
 }
