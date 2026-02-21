@@ -30,6 +30,9 @@
     "tailwind-merge": "^3.4.0",
     "zod": "^4.3.6"
   },
+  "overrides": {
+    "minimatch": "^10.2.1"
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@tailwindcss/vite": "^4.1.18",
