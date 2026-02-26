@@ -51,7 +51,7 @@ export function FileRow({ file }: { file: UserFile }) {
 
         <div className="flex items-center gap-3">
           {isExpired ? (
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-gray-500">
               Ce fichier a expiré, il n'est plus stocké chez nous
             </span>
           ) : (
