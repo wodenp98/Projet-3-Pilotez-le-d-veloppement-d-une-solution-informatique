@@ -92,6 +92,8 @@ mvn test -Dspring.profiles.active=test
 
 Les tests utilisent une base H2 en mémoire — aucun Docker requis.
 
+![test-backend](docs/images/test-backend.png)
+
 **Rapport de couverture JaCoCo :**
 
 ```bash
@@ -104,6 +106,8 @@ mvn test jacoco:report -Dspring.profiles.active=test
 cd frontend
 npm test
 ```
+
+![test-frontend](docs/images/test-frontend.png)
 
 **Avec rapport de couverture :**
 
@@ -119,6 +123,8 @@ Prérequis : backend et frontend doivent être démarrés.
 cd frontend
 npm run cypress:run
 ```
+
+![test-cypress](docs/images/test-cypress.png)
 
 ### Test de performance (k6)
 
