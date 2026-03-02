@@ -60,7 +60,7 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    void register_duplicateEmail_returns400() throws Exception {
+    void register_duplicateEmail_returns409() throws Exception {
         userRepository.save(new User("existe@test.com", passwordEncoder.encode("password123")));
 
         String body = objectMapper.writeValueAsString(
@@ -69,7 +69,7 @@ class AuthControllerIntegrationTest {
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error").value("Email already exists"));
     }
 
@@ -110,7 +110,7 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    void login_wrongPassword_returns400() throws Exception {
+    void login_wrongPassword_returns401() throws Exception {
         userRepository.save(new User("login@test.com", passwordEncoder.encode("password123")));
 
         String body = objectMapper.writeValueAsString(
@@ -119,19 +119,19 @@ class AuthControllerIntegrationTest {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").value("Invalid credentials"));
     }
 
     @Test
-    void login_nonExistentUser_returns400() throws Exception {
+    void login_nonExistentUser_returns401() throws Exception {
         String body = objectMapper.writeValueAsString(
                 Map.of("email", "inconnu@test.com", "password", "password123"));
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").value("Invalid credentials"));
     }
 }

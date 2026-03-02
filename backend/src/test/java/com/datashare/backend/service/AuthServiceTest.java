@@ -4,6 +4,8 @@ import com.datashare.backend.dto.AuthResponse;
 import com.datashare.backend.dto.LoginRequest;
 import com.datashare.backend.dto.RegisterRequest;
 import com.datashare.backend.entity.User;
+import com.datashare.backend.exception.ConflictException;
+import com.datashare.backend.exception.UnauthorizedException;
 import com.datashare.backend.repository.UserRepository;
 import com.datashare.backend.security.JwtUtil;
 import org.junit.jupiter.api.Test;
@@ -56,7 +58,7 @@ class AuthServiceTest {
         when(userRepository.existsByEmail("test@test.com")).thenReturn(true);
 
         assertThatThrownBy(() -> authService.register(request))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessage("Email already exists");
     }
 
@@ -81,7 +83,7 @@ class AuthServiceTest {
         when(userRepository.findByEmail("unknown@test.com")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> authService.login(request))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(UnauthorizedException.class)
                 .hasMessage("Invalid credentials");
     }
 
@@ -94,7 +96,7 @@ class AuthServiceTest {
         when(passwordEncoder.matches("wrongpw", "encodedPw")).thenReturn(false);
 
         assertThatThrownBy(() -> authService.login(request))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(UnauthorizedException.class)
                 .hasMessage("Invalid credentials");
     }
 }

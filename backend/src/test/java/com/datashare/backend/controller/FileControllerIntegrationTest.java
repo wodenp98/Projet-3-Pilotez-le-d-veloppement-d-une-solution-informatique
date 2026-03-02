@@ -182,7 +182,7 @@ class FileControllerIntegrationTest {
     }
 
     @Test
-    void downloadFile_wrongPassword_returns400() throws Exception {
+    void downloadFile_wrongPassword_returns401() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "secret.pdf", "application/pdf", "contenu".getBytes());
 
@@ -197,7 +197,7 @@ class FileControllerIntegrationTest {
 
         mockMvc.perform(post("/api/files/download/" + token)
                         .param("password", "mauvais"))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").value("Invalid password"));
     }
 

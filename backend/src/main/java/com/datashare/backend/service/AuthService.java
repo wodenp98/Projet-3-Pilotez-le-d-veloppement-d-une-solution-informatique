@@ -4,6 +4,8 @@ import com.datashare.backend.dto.AuthResponse;
 import com.datashare.backend.dto.LoginRequest;
 import com.datashare.backend.dto.RegisterRequest;
 import com.datashare.backend.entity.User;
+import com.datashare.backend.exception.ConflictException;
+import com.datashare.backend.exception.UnauthorizedException;
 import com.datashare.backend.repository.UserRepository;
 import com.datashare.backend.security.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,7 +28,7 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("Email already exists");
+            throw new ConflictException("Email already exists");
         }
 
         User user = new User(request.email(), passwordEncoder.encode(request.password()));
@@ -38,10 +40,10 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
+                .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new IllegalArgumentException("Invalid credentials");
+            throw new UnauthorizedException("Invalid credentials");
         }
 
         String token = jwtUtil.generateToken(user.getEmail());

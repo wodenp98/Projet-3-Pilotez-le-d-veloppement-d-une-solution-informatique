@@ -19,6 +19,10 @@ import com.datashare.backend.dto.FileUploadResponse;
 import com.datashare.backend.entity.FileEntity;
 import com.datashare.backend.entity.Tag;
 import com.datashare.backend.entity.User;
+import com.datashare.backend.exception.ForbiddenException;
+import com.datashare.backend.exception.GoneException;
+import com.datashare.backend.exception.NotFoundException;
+import com.datashare.backend.exception.UnauthorizedException;
 import com.datashare.backend.repository.FileRepository;
 import com.datashare.backend.repository.UserRepository;
 
@@ -59,7 +63,7 @@ public class FileService {
                 ? expirationDays : 7;
 
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         String storedName = storageService.store(file);
         String token = UUID.randomUUID().toString();
@@ -111,7 +115,7 @@ public class FileService {
 
     public List<FileUploadResponse> getUserFiles(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         return fileRepository.findByUserIdOrderByCreatedAtDesc(user.getId()).stream()
                 .map(f -> new FileUploadResponse(
@@ -130,7 +134,7 @@ public class FileService {
 
     public FileInfoResponse getFileInfo(String token) {
         FileEntity fileEntity = fileRepository.findByToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("File not found"));
+                .orElseThrow(() -> new NotFoundException("File not found"));
 
         boolean expired = fileEntity.getExpiredAt().isBefore(LocalDateTime.now());
 
@@ -146,18 +150,18 @@ public class FileService {
 
     public Path downloadFile(String token, String password) {
         FileEntity fileEntity = fileRepository.findByToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("File not found"));
+                .orElseThrow(() -> new NotFoundException("File not found"));
 
         if (fileEntity.getExpiredAt().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("File has expired");
+            throw new GoneException("File has expired");
         }
 
         if (fileEntity.getPassword() != null) {
             if (password == null || password.isBlank()) {
-                throw new IllegalArgumentException("Password is required");
+                throw new UnauthorizedException("Password is required");
             }
             if (!passwordEncoder.matches(password, fileEntity.getPassword())) {
-                throw new IllegalArgumentException("Invalid password");
+                throw new UnauthorizedException("Invalid password");
             }
         }
 
@@ -167,13 +171,13 @@ public class FileService {
     public String getFileName(String token) {
         return fileRepository.findByToken(token)
                 .map(FileEntity::getName)
-                .orElseThrow(() -> new IllegalArgumentException("File not found"));
+                .orElseThrow(() -> new NotFoundException("File not found"));
     }
 
     public String getFileContentType(String token) {
         return fileRepository.findByToken(token)
                 .map(FileEntity::getType)
-                .orElseThrow(() -> new IllegalArgumentException("File not found"));
+                .orElseThrow(() -> new NotFoundException("File not found"));
     }
 
     private void validateFile(MultipartFile file) {
@@ -193,13 +197,13 @@ public class FileService {
     @Transactional
     public void deleteFile(Long fileId, String userEmail) {
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         FileEntity fileEntity = fileRepository.findById(fileId)
-                .orElseThrow(() -> new IllegalArgumentException("File not found"));
+                .orElseThrow(() -> new NotFoundException("File not found"));
 
         if (!fileEntity.getUser().getId().equals(user.getId())) {
-            throw new IllegalArgumentException("You can only delete your own files");
+            throw new ForbiddenException("You can only delete your own files");
         }
 
         storageService.delete(fileEntity.getFilePath());

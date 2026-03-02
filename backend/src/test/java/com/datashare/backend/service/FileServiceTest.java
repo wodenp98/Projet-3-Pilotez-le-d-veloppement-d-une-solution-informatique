@@ -23,6 +23,10 @@ import com.datashare.backend.dto.FileInfoResponse;
 import com.datashare.backend.dto.FileUploadResponse;
 import com.datashare.backend.entity.FileEntity;
 import com.datashare.backend.entity.User;
+import com.datashare.backend.exception.ForbiddenException;
+import com.datashare.backend.exception.GoneException;
+import com.datashare.backend.exception.NotFoundException;
+import com.datashare.backend.exception.UnauthorizedException;
 import com.datashare.backend.repository.FileRepository;
 import com.datashare.backend.repository.UserRepository;
 
@@ -169,7 +173,7 @@ class FileServiceTest {
         when(userRepository.findByEmail("unknown@test.com")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> fileService.upload(file, "unknown@test.com", 7, null, null))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasMessage("User not found");
     }
 
@@ -209,7 +213,7 @@ class FileServiceTest {
         when(userRepository.findByEmail("unknown@test.com")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> fileService.getUserFiles("unknown@test.com"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasMessage("User not found");
     }
 
@@ -243,7 +247,7 @@ class FileServiceTest {
         when(fileRepository.findByToken("fake")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> fileService.getFileInfo("fake"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasMessage("File not found");
     }
 
@@ -284,7 +288,7 @@ class FileServiceTest {
         when(fileRepository.findByToken("token-123")).thenReturn(Optional.of(fileEntity));
 
         assertThatThrownBy(() -> fileService.downloadFile("token-123", null))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(GoneException.class)
                 .hasMessage("File has expired");
     }
 
@@ -296,7 +300,7 @@ class FileServiceTest {
         when(fileRepository.findByToken("token-123")).thenReturn(Optional.of(fileEntity));
 
         assertThatThrownBy(() -> fileService.downloadFile("token-123", null))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(UnauthorizedException.class)
                 .hasMessage("Password is required");
     }
 
@@ -309,7 +313,7 @@ class FileServiceTest {
         when(passwordEncoder.matches("mauvais", "encodedPw")).thenReturn(false);
 
         assertThatThrownBy(() -> fileService.downloadFile("token-123", "mauvais"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(UnauthorizedException.class)
                 .hasMessage("Invalid password");
     }
 
@@ -318,7 +322,7 @@ class FileServiceTest {
         when(fileRepository.findByToken("fake")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> fileService.downloadFile("fake", null))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasMessage("File not found");
     }
 
@@ -349,7 +353,7 @@ class FileServiceTest {
         when(fileRepository.findById(1L)).thenReturn(Optional.of(fileEntity));
 
         assertThatThrownBy(() -> fileService.deleteFile(1L, "test@test.com"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ForbiddenException.class)
                 .hasMessage("You can only delete your own files");
     }
 
@@ -359,7 +363,7 @@ class FileServiceTest {
         when(fileRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> fileService.deleteFile(99L, "test@test.com"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasMessage("File not found");
     }
 
@@ -368,7 +372,7 @@ class FileServiceTest {
         when(userRepository.findByEmail("unknown@test.com")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> fileService.deleteFile(1L, "unknown@test.com"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasMessage("User not found");
     }
 
